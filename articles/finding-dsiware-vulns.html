@@ -61,25 +61,25 @@ But today, I wanted to be able to explain how you could be able to find vulnerab
 
 <h1>
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Picking a target:</h1>
-<p>For the sake of this article looking for stack smashing vulnerabilities in DSiWare applications, I would start with games that have mostly profile names or some type of username-input. It doesn't have to be strictly profile names but there are some applications that input high-score names like Fieldrunners. Even if the string character is 3 bytes long, you can still try. 
+<p>For the sake of this article, I'll be looking for stack smashing vulnerabilities in DSiWare applications. I would start with games that have profile names or some type of username-input. It doesn't have to be strictly profile names but there are some games that allow putting in your name as you reached a high-score, like Fieldrunners. Even if the string is 3 bytes long, you can still try. 
 <br><br>
-So, I'm going to use a simple game called "WordSearcher" that I already looked at and it's not vulnerable, but it's a really good example. So remember what to look for:
+So, I'm going to use a simple game called "WordSearcher" that I already looked at. It's not vulnerable, but it's useful for a really good example. So remember what to look for:
 <ul>
-<li>Look at list of <a href="http://dsibrew.org/wiki/DSiWare_VulnList">Examined DSiWare Applications</a> before you start. Don't waste your time if you're looking into finding new flaws.</li>
+<li>Look at list of <a href="http://dsibrew.org/wiki/DSiWare_VulnList">examined DSiWare titles</a> before you start. Don't waste your time if you're looking into finding new flaws.</li>
 <li>Profile names that allow you to create a custom name</li>
-<li>Games with highscores that allow a custom name as well could be useful</li>
-<li>Avoid some games with multiple elements (some RPGs) unless you like the challenge for checksums</li>
+<li>Games with highscores that allows a custom name</li>
+<li>Avoid some games with multiple elements (some RPGs) unless you like the challenge for checksums. Some may not have too many checksums but it's recommended to start simple.</li>
 </ul>
-Once you have these to think though or consider, it shouldn't be a challenge to pick a application to observe. So let's get started looking at "WordSearcher". I'll also use Fieldrunners as a example what would happen if there was an exploitable flaw in a game.
+It shouldn't be a challenge to pick a title to observe. I'll also be looking at Fieldrunners to show you what it looks like to find a useful flaw.
 </p>
 
 <h1>
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting past Checksums:</h1>
-<p>Checksums/Sums really plays a huge role for certain games or applications. For those of you who do not know what checksums are, allow me to break it down for you. 
+<p>Checksums/Sums plays a huge role for certain games or applications. For those of you who do not know what checksums are, allow me to break it down for you. 
 <br><br>
-The word "Check" should ring a bell. The word "Sum" is like a number or a byte. maybe adding if you're a mathematician. So if you really put those 2 meanings together, you can tell they're checking something. But for what purpose? It's to ensure a file or a section in a file is not corrupted or tampered with. Without these, programs/applications would be extremly vulnerable to simple attacks or the application could act crazy depending how bad it's scripted.
+The word, "Check", should ring a bell. The word "Sum" is like a number or a byte. Maybe adding if you're a mathematician. So if you really put those 2 meanings together, you can tell they're checking something. But for what purpose? It's to ensure a file or a section in a file is not corrupted or tampered with. Without checksums, programs/applications would be extremly vulnerable to simple attacks.
 <br><br>
-Thus, editing a savefile without actually patching or going through the right corrections. So that's what we have to get through before we start digging or editing whatever we please. Let's create some saves and compare those files so we can pin-point or see if this WordSearcher game has a checksum(s). Luckily, it's common for a DSiWare appplication to use a familiar CRC polynomial so you have a chance to patch checksums easily with <a href="https://mh-nexus.de/en/hxd/">HxD</a> or other sum calculators.
+With checksums, editing a savefile without actually patching those checksum bytes will ensure the game deletes and rewrites the save. So that's what we have to get through before we start digging or editing whatever we please. Let's create some saves and compare those files so we can pin-point or see if this WordSearcher game has a checksum(s). Luckily, it's common for a DSiWare appplication to use a familiar CRC polynomial so you have a chance to patch checksums easily with <a href="https://mh-nexus.de/en/hxd/">HxD</a> or other sum calculators.
 <br><br>
 So I created 2 brand new profiles. 1 contains a my username to be AAAAAAAA, and the other contains AAAAAAAA. So two different public.sav files to use <a href="https://www.cjmweb.net/vbindiff/">VBinDiff</a> to compare. I simple just renamed those to their apppropriate names. But before that, we first have to get the real save that's mounted in the public.sav. So we'll use <a href="https://www.osforensics.com/tools/mount-disk-images.html">OSFMount</a> to do this.
 <br><br><br>
