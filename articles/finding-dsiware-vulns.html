@@ -1,1 +1,184 @@
+<!DOCTYPE html>
+<html>
 
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="ChampionLeake : ">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="../stylesheets/stylesheet.css">
+
+    <title>Finding DSiWare vulns</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/ChampionLeake">View on GitHub</a>
+
+          <h1 id="project_title"><img src="../avatar.png" width="100" height="100" align="top"> <u>ChampionLeake</u></h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introduction:</h1>
+<p>I noticed that there were some questions about how some reverse-engineers or hackers found exploitable vulns in DSiWare applications. I also noticed that there weren't any write-ups or documentation that involved discovering DSiWare application flaws. 
+<br>
+<br>
+But today, I wanted to be able to explain how you could be able to find vulnerabilities in DSiWare applications <b><u>(If there are any to pop)</u></b>. It'll save people time to have no need to ask if a game is vulnerable or not. Plus, I think this could be a good introduction to learn how to get into exploiting applications or games. Without no further interruptions or side-bar conversations, let's get started :D</p>
+
+<h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Things to know:</h1>
+<p>To get things out of the way, you should know some things before you start. 
+<ul>
+<li>A crash doesn't mean that it's useful. Indeed that it might have potential, but if it doesn't overwritten part of the stack registers, it's not likely to be useful but that will be covered later on in the article.</li>
+<li>I'll only be covering stack smashing flaws since it's the easiest to start-off with and I'm familiar with these flaws pretty well, so know how stack smashing works. You can have a overview on this topic elsewhere but <a href="https://cturt.github.io/DS-exploit-finding.html">CTurt's DS-exploit-finding guide works</a> (Or I can google it for you <a href-"http://lmgtfy.com/?q=how+does+stack+smashing+work">Here</a>)</li>
+<li>Know that the DSi uses a ARM Processor. R0-R12 are generally based use for calculation as the last 3, R13(SP = Stack Pointer), R14(LR = Link Register), and R15(PC = Program Counter) are unique. You can find more details on these registers <a href="https://problemkaputt.de/gbatek.htm#armcpuregisterset">Here</a>!</li>
+</ul>
+</p>
+
+<h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tools I used:</h1>
+<p>Now that's out of the way, you'll need the right equipment in order to succeed. Here's the tools I used for the purpose of this article. 
+<ul>
+<li><a href="https://problemkaputt.de/gba.htm">NO$GBA</a> - It's really useful to emulate your DSi NAND. it's already useful for debugging so we'll be using this emulator.</li>
+<li><a href="https://github.com/WinterMute/twltool">TWLTool</a> - You'll definitely need this to be able to decrypt/encrypt your DSi NAND so you can edit the NAND with the save you're injecting for NO$GBA.</li>
+<li><a href="https://dsi.cfw.guide">HiyaCFW(Optional)</a> - This makes it easy to actually pull your savedata as the SD is your NAND. (This is optional though)
+<li><a href="https://dsi.cfw.guide/assets/files/fwTool.nds">FWTOOL</a> - This will be useful for dumping your NAND so you can use it for NO$GBA to debug/emulate your DSi. (You'll need homebrew access)
+<li><a href="https://mh-nexus.de/en/hxd/">HxD</a> - I use this hex editor a lot and it has useful analysis features that we'll use in this guide.</li>
+<li><a href="https://www.cjmweb.net/vbindiff/">VBinDiff</a> - I use this to mostly compare files next to each other. This will help find the differences in a DSiWare savefile for checksums, different names or other garbage tbh :/</li>
+<li><a href="https://www.osforensics.com/tools/mount-disk-images.html">OSFMount</a> - This tool will be useful for mounting the public.sav file to reveal basically the real save. Although the save is in the public.sav but it's useful to just mount the file and take what's in it to observe and then put it back.</li>
+<li>Money - You'll need it to buy these games you don't have.</li>
+</ul>
+</p>
+
+<h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Picking a target:</h1>
+<p>For the sake of this article looking for stack smashing vulnerabilities in DSiWare applications, I would start with games that have mostly profile names or some type of username-input. It doesn't have to be strictly profile names but there are some applications that input high-score names like Fieldrunners. Even if the string character is 3 bytes long, you can still try. 
+<br><br>
+So, I'm going to use a simple game called "WordSearcher" that I already looked at and it's not vulnerable, but it's a really good example. So remember what to look for:
+<ul>
+<li>Look at list of <a href="http://dsibrew.org/wiki/DSiWare_VulnList">Examined DSiWare Applications</a> before you start. Don't waste your time if you're looking into finding new flaws.</li>
+<li>Profile names that allow you to create a custom name</li>
+<li>Games with highscores that allow a custom name as well could be useful</li>
+<li>Avoid some games with multiple elements (some RPGs) unless you like the challenge for checksums</li>
+</ul>
+Once you have these to think though or consider, it shouldn't be a challenge to pick a application to observe. So let's get started looking at "WordSearcher". I'll also use Fieldrunners as a example what would happen if there was an exploitable flaw in a game.
+</p>
+
+<h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting past Checksums:</h1>
+<p>Checksums/Sums really plays a huge role for certain games or applications. For those of you who do not know what checksums are, allow me to break it down for you. 
+<br><br>
+The word "Check" should ring a bell. The word "Sum" is like a number or a byte. maybe adding if you're a mathematician. So if you really put those 2 meanings together, you can tell they're checking something. But for what purpose? It's to ensure a file or a section in a file is not corrupted or tampered with. Without these, programs/applications would be extremly vulnerable to simple attacks or the application could act crazy depending how bad it's scripted.
+<br><br>
+Thus, editing a savefile without actually patching or going through the right corrections. So that's what we have to get through before we start digging or editing whatever we please. Let's create some saves and compare those files so we can pin-point or see if this WordSearcher game has a checksum(s). Luckily, it's common for a DSiWare appplication to use a familiar CRC polynomial so you have a chance to patch checksums easily with a href="https://mh-nexus.de/en/hxd/">HxD</a> or other sum calculators.
+<br><br>
+So I created 2 brand new profiles. 1 contains a my username to be AAAAAAAA, and the other contains AAAAAAAA. So two different public.sav files to use <a href="https://www.cjmweb.net/vbindiff/">VBinDiff</a> to compare. I simple just renamed those to their apppropriate names. But before that, we first have to get the real save that's mounted in the public.sav. So we'll use <a href="https://www.osforensics.com/tools/mount-disk-images.html">OSFMount</a> to do this.
+<br><br><br>
+Before you start, you must have your DSi NAND that you dumped. There are tutorials out there to be able to dump your nand. You'll also need your DSi(s) CID. The newest <a href="https://dsi.cfw.guide/assets/files/fwTool.nds">FWTOOL 2.0.0</a> homebrew application should help with that. You'll also need your ConsoleID as well.
+<br><br>Assuming you did this already and that you know how to do this let's move onto mounting our save files we made.
+<ul>
+<li>Open up "OSFMount"</li>
+<li>Select "Mount New..."</li>
+<li>Click the "..." button to the right of "Image file".</li>
+<li>Find the public.sav you renamed (AAAAAAAA.sav for this guide)</li>
+<li>Un-check "Read-Only drive" and check "Mount as removeable media"</li>
+<li>Click "Ok" and you should be ready to go.</li>
+<img src="../articles/assets/OSFMount_ScreenShot.JPG">
+<br>
+You can click one of the drive medias and you should be greeted with a real savefile without the DSiWare headers or any of the things we're not focusing on. Repeat the samething and you should be greeted with another. Let's now move on to comparing the two files wit VBinDiff
+<img src="../articles/assets/OSFMount_ScreenShot2.JPG">
+<br><br>
+You should always have a different file name for these files so that you're a bit organized with everything. So selecting those two files and dragging it in the program gave us this.
+<img src="../articles/assets/VBinDiff-ScreenShot.JPG">
+<img src="../articles/assets/VBinDiff-ScreenShot2.JPG">
+<br>
+As you noticed from these two screenshot, we seemed to have found the differences in these saves by pressing Enter or manually scrolling. At offset 0x0 for both files, it seems we might be dealing with CRC32 considering that it's 4 bytes long. CRC8/Sum would be 1 byte long and CRC16/Checksum-16 would be 2 bytes. So since we now know where the checksum is, we're going to start investigating what happens if we change it or why those byets came to that outcome. Let's begin to open our save in <a href="https://mh-nexus.de/en/hxd/">HxD</a>
+<br><br>
+So going back to where I mentioned that HxD has really useful features like analysis, this is where we're going to atempt to use HxD's tools to figure out if the checksum is using a classical-polynomial algorithm or it's using a custom custom algorithm. I'll only cover classical polynomial since custom checksum algorithms requires dumping the games code and using any disassembler to reverse engineer the code to find that CRC function. I don't know how to do that but we'll be doing something else that I'm calling this the <a href="https://github.com/WemI0">Weml0Sum</a> as he was the first to atually teach me this cool trick. It's really use.
+<br><br>
+What is the 'WemI0Sum' method? It's a method to easily have a chance to patch checksums and or a way to determine in a game uses a classical-polynomial algorithm or not. This method consists on highlighting blocks/chunks of a the save and use a CRC analyzer with he appropriate sum calculation of course. It's more time consuming and it's a bit because if you don't have much reverse-engineering experience, the WemI0Sum is a go. So let's try it with these saves we have.
+<br><br>
+Since we're now open in HxD, I selected basically after the first for byte, which is our checksum, all the way to the end of the file. It's highly simple and with this method, it may take an hour or all day to find the perfect area where the checksum will change or be affected. But take a look at the screenshot how things should look like if you followed along.
+<img src="../articles/assets/HxD-ScreenShot.JPG">
+<br>
+Now this is where the 'WemI0Sum' will determine if this game is using a classical-polynomial or not.
+<ul>
+<li>So you have your selected area so you need to navigate to "Analysis"</li>
+<li>From there, select the "Checksums..." option.</li>
+<li>Be sure to choose the appropriate algorithm. In that case for this game, it uses CRC32/Checksum-32 so I select CRC first and pressed 'OK'</li>
+</ul>
+<img src="../articles/assets/HxD-ScreenShot2.JPG">
+I want you know to tell yourself, what do you notice in the yellow highlighted areas of the screenshot above? If you guess it, THE RESULTS ARE THE SAME BUT IT'S BACKWARDS. That's good since the checksum is in little-endian, reversed bytes.
+<br>
+Notice how the bytes "C2 EC 62 15" in the save is reverse by "15 62 EC C2". So let's take this to the test and look at the other file to make sure our reading is accurate.
+<img src="../articles/assets/HxD-ScreenShot3.JPG">
+Once again, the bytes seem to be identical but in little-endian. We can confirm from here that the game does indeedly use a familiar CRC32 polynomial algorithm. Now from there, you can basically use an open source CRC patcher, edit the offsets a bit and use it as a CRCFixer for your game. We finally cracked the checksum of this game and we can now move on to the next section. Also, not all games will be easy with this method as I explained earlier. You'll have to disassemble the game's code and reverse-engineer the checksum function itself if the Weml0Sum doesn't work.
+</p>
+
+<h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Attempting an overflow:</h1>
+<p>If you maade it this far, congratulations, you're finally ready to go ahead of edit the game's savefile and look for potential overflows. WordSearcher's profile name ascends to 8-bytes long. Let's try to see what would happen if we used an extensive string. I like using extensive "AAs" since it's easier for me to look at the registers if any are verwritten with those strings.
+<img src="../articles/assets/HxD-ScreenShot4.JPG">
+I think what we have should be enough to do some damage to the application. Once you're done adding a long string or editing the save, do the 'Welm0Sum' method to correct the checksums so it doesn't come up as corrupt when you open it.
+<br><br>
+Rename the savefile back to its original name (game_user.bin) and you can basically copy and paste the file back into the public.sav while OSFMount was open. Once things are done, you're free to "Dismount all & Exit" the program. (Click OK if there's a warning).
+<br><br>
+You'll need to decrypt your NAND and inject the save to it's original spot and re-encrypt the NAND to test it in NO$GBA. You can find the tutorial for that <a href="https://gbatemp.net/threads/dsi-downgrading-the-complete-guide.393682/">here</a> under the "Decrypting your NAND" spoiler.
+<br><br>
+Once our NAND is back to being encrypted, we can now try to emulate our NAND in NO$GBA. I won't go over how to set up the NAND to use for NO$GBA since there are tutorials elsewhere to look into.
+<br><br>
+Open up NO$GBA and select any game from the dirrectoy you have your roms placed. You should on the DSi Menu, now we can test to see if we get a crash from our attempted overflow.
+<center><img src="../articles/assets/Inital-Overflow-ScreenShot.JPG"></center>
+<br>
+ON REAL HARDWARE, this part of the game would freeze and crash the DSi, let's see if this would happen on NO$GBA to test our overflow attempt.
+<img src="../articles/assets/Inital-Overflow-ScreenShot2.JPG">
+If you already paid attention from what I said earlier in the guide about this game, you know it's not being vulnerable. NO$GBA doesn't seem to have any error pop-ups or any registers in the highlighted regions to be overwritten. So from there, you could try other methods. 
+<br><br>
+So if the profile string isn't vulnerable we can still improvise, we can try the crossword levels itself maybe. The crossword levels in this game is plaintext, which is a big no-no. Anyway, let's try it. We first have to make crossword data.
+<img src="../articles/assets/HxD-ScreenShot5.JPG">
+Instead of AA(s), I changed things up to be BB(s). We used an exetensive large string for one of the crossword levels. The crosswords levels applies to the regular profile name checksum so the Welm0Sum would work. Now we just have to test it.
+<br><br>
+We test it in NO$GBA again there seems to be no errors but custom/non-existant strings n the crossword board. No overflows and this type of bug is not exploitable. 
+<img src="../articles/assets/Inital-Overflow-ScreenShot3.JPG">
+So now let me show you what NO$GBA would look like if you got a useful crash for Fieldrunners. You can tell if the game crashed if NO$GBA error popped up and if you look at the highlighted area, some of the registers are overwritten with AA(s). If R15(The PC) is overwritten as well, you have yourself an exploitable application.
+<img src="../articles/assets/Overflow-Example.JPG">
+</p>
+
+<h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Closing:</h1>
+<p>So I hope this article/writeup gave you an overview on how to find vulnerabilities in DSiWare applications. Hopefully I can update this article to include more things to cover like reverse-engineering the checksums and maybe other things. If you ever have any questions, you can let me know on my <a href="https://discord.gg/w4SKAr8">Discord Server</a> and I'll try my best to answer all of your questions. 
+<br><br>
+Hopefully I can probably get a writeup about porting NDS-HBMenu for exploitable games. Anyways, I'm suprised you made it this far considering how long this article is. I hope you learned something today at least.
+</p>
+
+<h1>
+<a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits:</h1>
+I would like to thank all of the following below:
+<ul>
+<li>NoCash - For creating no$gba and for the excellent documentation</li>
+<li>WinterMute - For creating the tools FWTOOL and TWLTool</li>
+<li>Weml0 - For teaching me the 'WemI0Sum' method</li>
+<li>CTurt - Inspiration of his DS-exploit-finding guide</li>
+<li>Jerbear64 & emiyl - For the DSiCFW guide</li>
+</ul>
+If you're not on this list and I forgot to add you, let me know.
+      </section>
+    </div>
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+    
+  </body>
+</html>
