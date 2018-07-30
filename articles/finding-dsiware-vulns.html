@@ -36,20 +36,20 @@ But today, I wanted to be able to explain how you could be able to find vulnerab
 
 <h1>
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Things to know:</h1>
-<p>To get things out of the way, you should know some things before you start. 
+<p>To get things out of the way, you need know some things before you get started. 
 <ul>
-<li>A crash doesn't mean that it's useful. Indeed that it might have potential, but if it doesn't overwritten part of the stack registers, it's not likely to be useful but that will be covered later on in the article.</li>
-<li>I'll only be covering stack smashing flaws since it's the easiest to start-off with and I'm familiar with these flaws pretty well, so know how stack smashing works. You can have a overview on this topic elsewhere but <a href="https://cturt.github.io/DS-exploit-finding.html">CTurt's DS-exploit-finding guide works</a> (Or I can google it for you <a href-"http://lmgtfy.com/?q=how+does+stack+smashing+work">Here</a>)</li>
-<li>Know that the DSi uses a ARM Processor. R0-R12 are generally based use for calculation as the last 3, R13(SP = Stack Pointer), R14(LR = Link Register), and R15(PC = Program Counter) are unique. You can find more details on these registers <a href="https://problemkaputt.de/gbatek.htm#armcpuregisterset">Here</a>!</li>
+<li>A crash doesn't mean that it's automatically exploitable. Of course, the crash might be exploitable, but if it doesn't overwritten parts of the stack registers, it's not likely to be exploitable, but that will be covered later on in the article.</li>
+<li>I'll only be covering stack smashing flaws since it's the easiest to start-off with and I'm familiar with these type of vulnerablities to explain what they are. I suggest that you look up how stack smashing works. There's an overview on this topic on<a href="https://cturt.github.io/DS-exploit-finding.html">CTurt's DS-exploit-finding guide works</a> (Or I can google it for you <a href-"http://lmgtfy.com/?q=how+does+stack+smashing+work">Here</a>)</li>
+<li>You must know that the DSi uses a ARM Processor. R0-R12 are generally based use for calculation as the last 3, R13(SP = Stack Pointer), R14(LR = Link Register), and R15(PC = Program Counter) are unique. You can find more details on these registers <a href="https://problemkaputt.de/gbatek.htm#armcpuregisterset">here</a>!</li>
 </ul>
 </p>
 
 <h1>
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tools I used:</h1>
-<p>Now that's out of the way, you'll need the right equipment in order to succeed. Here's the tools I used for the purpose of this article. 
+<p>Now let's move on! You'll need the right equipment/tools to be able to get throught this article. Here's the tools I used for the purpose of this article. 
 <ul>
-<li><a href="https://problemkaputt.de/gba.htm">NO$GBA</a> - It's really useful to emulate your DSi NAND. it's already useful for debugging so we'll be using this emulator.</li>
-<li><a href="https://github.com/WinterMute/twltool">TWLTool</a> - You'll definitely need this to be able to decrypt/encrypt your DSi NAND so you can edit the NAND with the save you're injecting for NO$GBA.</li>
+<li><a href="https://problemkaputt.de/gba.htm">NO$GBA</a> - It's a really useful debugging emulator which can emulate your DSi NAND.</li>
+<li><a href="https://github.com/WinterMute/twltool">TWLTool</a> - You'll definitely need this to be able to decrypt/encrypt your DSi NAND. That way, you can edit the NAND with the save you're injecting for NO$GBA.</li>
 <li><a href="https://dsi.cfw.guide">HiyaCFW(Optional)</a> - This makes it easy to actually pull your savedata as the SD is your NAND. (This is optional though)
 <li><a href="https://dsi.cfw.guide/assets/files/fwTool.nds">FWTOOL</a> - This will be useful for dumping your NAND so you can use it for NO$GBA to debug/emulate your DSi. (You'll need homebrew access)
 <li><a href="https://mh-nexus.de/en/hxd/">HxD</a> - I use this hex editor a lot and it has useful analysis features that we'll use in this guide.</li>
@@ -79,7 +79,7 @@ Once you have these to think though or consider, it shouldn't be a challenge to 
 <br><br>
 The word "Check" should ring a bell. The word "Sum" is like a number or a byte. maybe adding if you're a mathematician. So if you really put those 2 meanings together, you can tell they're checking something. But for what purpose? It's to ensure a file or a section in a file is not corrupted or tampered with. Without these, programs/applications would be extremly vulnerable to simple attacks or the application could act crazy depending how bad it's scripted.
 <br><br>
-Thus, editing a savefile without actually patching or going through the right corrections. So that's what we have to get through before we start digging or editing whatever we please. Let's create some saves and compare those files so we can pin-point or see if this WordSearcher game has a checksum(s). Luckily, it's common for a DSiWare appplication to use a familiar CRC polynomial so you have a chance to patch checksums easily with a href="https://mh-nexus.de/en/hxd/">HxD</a> or other sum calculators.
+Thus, editing a savefile without actually patching or going through the right corrections. So that's what we have to get through before we start digging or editing whatever we please. Let's create some saves and compare those files so we can pin-point or see if this WordSearcher game has a checksum(s). Luckily, it's common for a DSiWare appplication to use a familiar CRC polynomial so you have a chance to patch checksums easily with <a href="https://mh-nexus.de/en/hxd/">HxD</a> or other sum calculators.
 <br><br>
 So I created 2 brand new profiles. 1 contains a my username to be AAAAAAAA, and the other contains AAAAAAAA. So two different public.sav files to use <a href="https://www.cjmweb.net/vbindiff/">VBinDiff</a> to compare. I simple just renamed those to their apppropriate names. But before that, we first have to get the real save that's mounted in the public.sav. So we'll use <a href="https://www.osforensics.com/tools/mount-disk-images.html">OSFMount</a> to do this.
 <br><br><br>
