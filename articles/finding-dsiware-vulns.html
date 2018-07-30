@@ -110,65 +110,65 @@ Copy the file that's mounted from the savefile and place it somewhere safe. Repe
 <br>
 We can now move onto using VBinDiff to compare the two savefiles.
 <br><br>
-Select the two files and drag it to the program VBinDiff gave us this.
+Select the two savefiles and drag them to the VBinDiff program and it should give you this.
 <img src="../articles/assets/VBinDiff-ScreenShot.JPG">
 <img src="../articles/assets/VBinDiff-ScreenShot2.JPG">
 <br>
-As you noticed from these two screenshot, we seemed to have found the differences in these saves by pressing Enter or manually scrolling. At offset 0x0 for both files, it seems we might be dealing with CRC32 considering that it's 4 bytes long. CRC8/Sum would be 1 byte long and CRC16/Checksum-16 would be 2 bytes. So since we now know where the checksum is, we're going to start investigating what happens if we change it or why those byets came to that outcome. Let's begin to open our save in <a href="https://mh-nexus.de/en/hxd/">HxD</a>
+We seemed to have found the differences in these saves. By pressing Enter or manually scrolling, it'll find another difference in the saves. At offset 0x0, for both files, it seems we might be dealing with CRC32, considering that the first 4 bytes are different within the sames. CRC8/Checksum-8 would be a byte long, CRC16/Checksum-16 would be 2 bytes long, and of course CRC32/Checkum-32 would be 4 bytes long. Since we now know where the checksum is located, we're going to start investigating what and why those byets came to that outcome. Let's begin to open our saves in <a href="https://mh-nexus.de/en/hxd/">HxD</a>
 <br><br>
-So going back to where I mentioned that HxD has really useful features like analysis, this is where we're going to atempt to use HxD's tools to figure out if the checksum is using a classical-polynomial algorithm or it's using a custom custom algorithm. I'll only cover classical polynomial since custom checksum algorithms requires dumping the games code and using any disassembler to reverse engineer the code to find that CRC function. I don't know how to do that but we'll be doing something else that I'm calling this the <a href="https://github.com/WemI0">Weml0Sum</a> as he was the first to atually teach me this cool trick. It's really use.
+I mentioned eariler that HxD has really useful features such as Checksum analysis. This is where we're going to attempt those features to figure out if the checksum is using a classical-polynomial algorithm or using a custom-polynomial algorithm. I'll only be cover classical polynomial, since custom checksum algorithms requires dumping the game's code and using any disassemblers (like IDA PRO) to reverse engineer the code to find that CRC function. I don't know how to do such thing yet, but we'll be doing something else that I'd like to call <a href="https://github.com/WemI0">Weml0Sum</a> (since he tought me this way of dealing with checksums).
 <br><br>
-What is the 'WemI0Sum' method? It's a method to easily have a chance to patch checksums and or a way to determine in a game uses a classical-polynomial algorithm or not. This method consists on highlighting blocks/chunks of a the save and use a CRC analyzer with he appropriate sum calculation of course. It's more time consuming and it's a bit because if you don't have much reverse-engineering experience, the WemI0Sum is a go. So let's try it with these saves we have.
+What is the 'WemI0Sum' method? It's a process that can help easily patch checksums(if the game uses a classical-polynomial algorithm). This method can also be used to determine if a game uses a classical-polynomial algorithm or not. The process consists on highlighting/selecting blocks/chunks in the save and using HxD's CRC analyzer. The 'Weml0Sum' method can be time consuming because you're guessing selected blocks to match the initial checksum in the save file. The 'WemI0Sum' method is a go if you don't want to deal with dumping the game's code. So let's try this method with these savefiles we have.
 <br><br>
-Since we're now open in HxD, I selected basically after the first for byte, which is our checksum, all the way to the end of the file. It's highly simple and with this method, it may take an hour or all day to find the perfect area where the checksum will change or be affected. But take a look at the screenshot how things should look like if you followed along.
+Open one of the savefiles in HxD if you haven't, I selected basically after the first 4-bytes. It's all about guess which block matches the current checksum. I went from 0x4 to the very end of the file. Finding the right blocks could take hours or all day to find the perfect area where the checksum will match the current bytes. But take a look at the screenshot how things should look like if you followed along.
 <img src="../articles/assets/HxD-ScreenShot.JPG">
 <br>
-Now this is where the 'WemI0Sum' will determine if this game is using a classical-polynomial or not.
+The 'WemI0Sum' method help us will determine if the game uses a classical-polynomial algorithm or not.
 <ul>
-<li>So you have your selected area so you need to navigate to "Analysis"</li>
-<li>From there, select the "Checksums..." option.</li>
-<li>Be sure to choose the appropriate algorithm. In that case for this game, it uses CRC32/Checksum-32 so I select CRC first and pressed 'OK'</li>
+<li>Once you have the selected area, navigate to "Analysis"</li>
+<li>Select the "Checksums..." option.</li>
+<li>Be sure to choose the appropriate algorithm. In this case, the game uses CRC32/Checksum-32 so I select CRC32 first and pressed 'OK'</li>
 </ul>
 <img src="../articles/assets/HxD-ScreenShot2.JPG">
-I want you know to tell yourself, what do you notice in the yellow highlighted areas of the screenshot above? If you guess it, THE RESULTS ARE THE SAME BUT IT'S BACKWARDS. That's good since the checksum is in little-endian, reversed bytes.
+Now what do you notice about the yellow highlighted areas in the screenshot above? If you guess it, THE RESULTS ARE THE SAME, BUT IT'S BACKWARDS. That's good! Most calculators will present the checksum in <a href="https://en.wikipedia.org/wiki/Endianness#Little-endian">little-endian</a>.
 <br>
-Notice how the bytes "C2 EC 62 15" in the save is reverse by "15 62 EC C2". So let's take this to the test and look at the other file to make sure our reading is accurate.
+Notice how the bytes, "C2 EC 62 15", in the save is backwards from the checksum "15 62 EC C2". To make sure this is correct we're going to take a look at the other file to make sure if our guess is correct.
 <img src="../articles/assets/HxD-ScreenShot3.JPG">
-Once again, the bytes seem to be identical but in little-endian. We can confirm from here that the game does indeedly use a familiar CRC32 polynomial algorithm. Now from there, you can basically use an open source CRC patcher, edit the offsets a bit and use it as a CRCFixer for your game. We finally cracked the checksum of this game and we can now move on to the next section. Also, not all games will be easy with this method as I explained earlier. You'll have to disassemble the game's code and reverse-engineer the checksum function itself if the Weml0Sum doesn't work.
+Once again, the bytes seem to be identical but in little-endian. We can confirm that the game does use a familiar CRC32 polynomial algorithm. From there, you can basically use an open-sourced CRC patcher. just edit/ddd the offsets, and there you go. You have yourself a CRC patcher for your game. Now that we cracked the checksum of this game, we can now move on to the next section. Keep in mind that not all games will be easy with this method as I explained earlier. You'll need to disassemble the game's code and look for the CRC function itself.
 </p>
 
 <h1>
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Attempting an overflow:</h1>
-<p>If you maade it this far, congratulations, you're finally ready to go ahead of edit the game's savefile and look for potential overflows. WordSearcher's profile name ascends to 8-bytes long. Let's try to see what would happen if we used an extensive string. I like using extensive "AAs" since it's easier for me to look at the registers if any are verwritten with those strings.
+<p>If you've made it this far, congratulations, you're finally ready to go ahead of edit the game's savefile to look for potential vulnerabilities. WordSearcher's profile name as a character limit to only 8-bytes long. Let's see what happens if we use an very long string for our profile. I like using "AAs" since it's easier for me to look for in the stack the registers; if any were overwritten.
 <img src="../articles/assets/HxD-ScreenShot4.JPG">
-I think what we have should be enough to do some damage to the application. Once you're done adding a long string or editing the save, do the 'Welm0Sum' method to correct the checksums so it doesn't come up as corrupt when you open it.
+Once you're done adding/editing the profile name with a long string, you can go through 'Welm0Sum' process to correct the checksums or if you already made a tool to patch it for you, by all means.
 <br><br>
-Rename the savefile back to its original name (game_user.bin) and you can basically copy and paste the file back into the public.sav while OSFMount was open. Once things are done, you're free to "Dismount all & Exit" the program. (Click OK if there's a warning).
+Rename the savefile back to its' original name (in that case, the game's original save name was 'game_user.bin'). You should copy and paste the overflown savefile back into the 'public.sav' while OSFMount is open. Once things are done, you're free to "Dismount all & Exit" the program. (Click OK if there's a warning).
 <br><br>
-You'll need to decrypt your NAND and inject the save to it's original spot and re-encrypt the NAND to test it in NO$GBA. You can find the tutorial for that <a href="https://gbatemp.net/threads/dsi-downgrading-the-complete-guide.393682/">here</a> under the "Decrypting your NAND" spoiler.
+You'll need to decrypt your NAND and inject the 'public.sav' to its' original directory. After that, you can dismount the NAND and re-encrypt it with TWLTool so you can run it in NO$GBA. You can find the tutorial for that <a href="https://gbatemp.net/threads/dsi-downgrading-the-complete-guide.393682/">here</a> under the "Decrypting your NAND" spoiler.
 <br><br>
-Once our NAND is back to being encrypted, we can now try to emulate our NAND in NO$GBA. I won't go over how to set up the NAND to use for NO$GBA since there are tutorials elsewhere to look into.
+Once our NAND is re-encrypted, we can now try to emulate our NAND in NO$GBA. I won't go over how to set up the NAND to use for NO$GBA since it's a bit time consumming. You can find instructions on the offical no$gba website.
 <br><br>
-Open up NO$GBA and select any game from the dirrectoy you have your roms placed. You should on the DSi Menu, now we can test to see if we get a crash from our attempted overflow.
+Open up NO$GBA and select any DS rom you have. We now can test our overflown save for 'WordSearcher'.
 <center><img src="../articles/assets/Inital-Overflow-ScreenShot.JPG"></center>
 <br>
-ON REAL HARDWARE, this part of the game would freeze and crash the DSi, let's see if this would happen on NO$GBA to test our overflow attempt.
+ON REAL HARDWARE, this part of the game would freeze and crash. Let's see if this would happen in NO$GBA.
 <img src="../articles/assets/Inital-Overflow-ScreenShot2.JPG">
-If you already paid attention from what I said earlier in the guide about this game, you know it's not being vulnerable. NO$GBA doesn't seem to have any error pop-ups or any registers in the highlighted regions to be overwritten. So from there, you could try other methods. 
+If you already noticed attention from the beginning of this article, I mentionedthat this game is vulnerable. I'm going through this process to show you what would a useful and useless crash would look like in NO$GBA. In the emulator, it doesn't seem to have any error pop-ups, overwritten registers in the highlighted regions, etc. to be overwritten. But it's still not over. There are always cretive ways to look for flaws in a application. 
 <br><br>
-So if the profile string isn't vulnerable we can still improvise, we can try the crossword levels itself maybe. The crossword levels in this game is plaintext, which is a big no-no. Anyway, let's try it. We first have to make crossword data.
+We know that the profile names are not vulnerable. The game uses plaintext crossword levels. This could be a potential flaw in the game if it's in bound. So let's try it! We'll first need to generate the crossword data in the save. it can be done by just statring a crossword level and then saving and quitting. We now how to repeat the process of dumping our NAND, decrypt our NAND, fetch our save, mount our save, and then edit our save.
 <img src="../articles/assets/HxD-ScreenShot5.JPG">
-Instead of AA(s), I changed things up to be BB(s). We used an exetensive large string for one of the crossword levels. The crosswords levels applies to the regular profile name checksum so the Welm0Sum would work. Now we just have to test it.
+Instead of AA(s), I changed things up and used BB(s). We used a very large string once again to replace/overwritten on of the crossword levels. We can now finish things up with the 'Weml0Sum' method or use a working CRC patcher to correct the checksums. Now we just need to repeat injecting the save into the NAND.
 <br><br>
-We test it in NO$GBA again there seems to be no errors but custom/non-existant strings n the crossword board. No overflows and this type of bug is not exploitable. 
+We now tested our overflown save once again in NO$GBA and there seems to be no errors or any reigsters being overwritten. But at least there can be custom/non-existant strings in the crossword board itself! We can now conclude that this game doesn't seem to be vulnerable to stack smashing. :(
 <img src="../articles/assets/Inital-Overflow-ScreenShot3.JPG">
-So now let me show you what NO$GBA would look like if you got a useful crash for Fieldrunners. You can tell if the game crashed if NO$GBA error popped up and if you look at the highlighted area, some of the registers are overwritten with AA(s). If R15(The PC) is overwritten as well, you have yourself an exploitable application.
+Now let me show you what a useful crash would look like in NO$GBA with the game, "Fieldrunners". You can tell if the game crashed in NO$GBA if an error pop-up menu shows up and that in the highlighted area, some of the registers are overwritten with AA(s). If R15(The PC) is overwritten as well, you have yourself an exploitable application!
 <img src="../articles/assets/Overflow-Example.JPG">
 </p>
 
 <h1>
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Closing:</h1>
-<p>So I hope this article/writeup gave you an overview on how to find vulnerabilities in DSiWare applications. Hopefully I can update this article to include more things to cover like reverse-engineering the checksums and maybe other things. If you ever have any questions, you can let me know on my <a href="https://discord.gg/w4SKAr8">Discord Server</a> and I'll try my best to answer all of your questions. 
+<p>So I hope this article/writeup gave you an overview on how to find vulnerabilities for DSiWare titles. Hopefully I can update this article to cover things like reverse-engineering the checksums by using IDA and maybe more. If you ever have any questions, you can let me know on my <a href="https://discord.gg/w4SKAr8">Discord Server</a> and I'll try my best to answer all of your questions. 
 <br><br>
 Hopefully I can probably get a writeup about porting NDS-HBMenu for exploitable games. Anyways, I'm suprised you made it this far considering how long this article is. I hope you learned something today at least.
 </p>
@@ -177,11 +177,12 @@ Hopefully I can probably get a writeup about porting NDS-HBMenu for exploitable 
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits:</h1>
 I would like to thank all of the following below:
 <ul>
+<li><a href="https://github.com/yellows8">yellows8</a> - originally exploiting <a href-"https://github.com/yellows8/dsi/tree/master/exploits/fieldrunhax">Fieldrunners</a>
 <li>NoCash - For creating no$gba and for the excellent documentation</li>
-<li>WinterMute - For creating the tools FWTOOL and TWLTool</li>
-<li>Weml0 - For teaching me the 'WemI0Sum' method</li>
-<li>CTurt - Inspiration of his DS-exploit-finding guide</li>
-<li>Jerbear64 & emiyl - For the DSiCFW guide</li>
+<li><a href="https://github.com/Wintermute">WinterMute</a> - For creating the tools FWTOOL and TWLTool</li>
+<li><a href="https://github.com/Weml0">Weml0</a> - For teaching me the 'WemI0Sum' method</li>
+<li><a href="https://github.com/CTurt">CTurt</a> - Inspiration of his DS-exploit-finding guide</li>
+<li><a href="https://github.com/jerbear64">Jerbear64</a> & <a href="https://github.com/emiyl">emiyl</a> - For the DSiCFW guide</li>
 </ul>
 If you're not on this list and I forgot to add you, let me know.
       </section>
