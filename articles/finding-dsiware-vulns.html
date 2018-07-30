@@ -119,7 +119,7 @@ Select the two savefiles and drag them to the VBinDiff program and it should giv
 <br>
 We seemed to have found the differences in these saves. By pressing Enter or manually scrolling, it'll find another difference in the saves. At offset 0x0, for both files, it seems we might be dealing with CRC32, considering that the first 4 bytes are different within the sames. CRC8/Checksum-8 would be a byte long, CRC16/Checksum-16 would be 2 bytes long, and of course CRC32/Checkum-32 would be 4 bytes long. Since we now know where the checksum is located, we're going to start investigating what and why those byets came to that outcome. Let's begin to open our saves in <a href="https://mh-nexus.de/en/hxd/">HxD</a>
 <br><br>
-I mentioned eariler that HxD has really useful features such as Checksum analysis. This is where we're going to attempt those features to figure out if the checksum is using a classical-polynomial algorithm or using a custom-polynomial algorithm. I'll only be cover classical polynomial, since custom checksum algorithms requires dumping the game's code and using any disassemblers (like IDA PRO) to reverse engineer the code to find that CRC function. I don't know how to do such thing yet, but we'll be doing something else that I'd like to call <a href="https://github.com/WemI0">Weml0Sum</a> (since he tought me this way of dealing with checksums).
+I mentioned eariler that HxD has really useful features such as Checksum analysis. This is where we're going to attempt those features to figure out if the checksum is using a classical-polynomial algorithm or using a custom-polynomial algorithm. I'll only be cover classical polynomial, since custom checksum algorithms requires dumping the game's code and using any disassemblers (like IDA PRO) to reverse engineer the code to find that CRC function. I don't know how to do such thing yet, but we'll be doing something else that I'd like to call <a href="https://github.com/WemI0">WemI0Sum</a> (since he tought me this way of dealing with checksums).
 <br><br>
 What is the 'WemI0Sum' method? It's a process that can help easily patch checksums(if the game uses a classical-polynomial algorithm). This method can also be used to determine if a game uses a classical-polynomial algorithm or not. The process consists on highlighting/selecting blocks/chunks in the save and using HxD's CRC analyzer. The 'Weml0Sum' method can be time consuming because you're guessing selected blocks to match the initial checksum in the save file. The 'WemI0Sum' method is a go if you don't want to deal with dumping the game's code. So let's try this method with these savefiles we have.
 <br><br>
@@ -144,7 +144,7 @@ Once again, the bytes seem to be identical but in little-endian. We can confirm 
 <a id="hello-there" class="anchor" href="#hello-there" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Attempting an overflow:</h1>
 <p>If you've made it this far, congratulations, you're finally ready to go ahead of edit the game's savefile to look for potential vulnerabilities. WordSearcher's profile name as a character limit to only 8-bytes long. Let's see what happens if we use an very long string for our profile. I like using "AAs" since it's easier for me to look for in the stack the registers; if any were overwritten.
 <img src="../articles/assets/HxD-ScreenShot4.JPG">
-Once you're done adding/editing the profile name with a long string, you can go through 'Welm0Sum' process to correct the checksums or if you already made a tool to patch it for you, by all means.
+Once you're done adding/editing the profile name with a long string, you can go through 'WemI0Sum' process to correct the checksums or if you already made a tool to patch it for you, by all means.
 <br><br>
 Rename the savefile back to its' original name (in that case, the game's original save name was 'game_user.bin'). You should copy and paste the overflown savefile back into the 'public.sav' while OSFMount is open. Once things are done, you're free to "Dismount all & Exit" the program. (Click OK if there's a warning).
 <br><br>
@@ -183,7 +183,7 @@ I would like to thank all of the following below:
 <li><a href="https://github.com/yellows8">yellows8</a> - originally exploiting <a href-"https://github.com/yellows8/dsi/tree/master/exploits/fieldrunhax">Fieldrunners</a>
 <li>NoCash - For creating no$gba and for the excellent documentation</li>
 <li><a href="https://github.com/Wintermute">WinterMute</a> - For creating the tools FWTOOL and TWLTool</li>
-<li><a href="https://github.com/Weml0">Weml0</a> - For teaching me the 'WemI0Sum' method</li>
+<li><a href="https://github.com/WemI0">WemI0</a> - For teaching me the 'WemI0Sum' method</li>
 <li><a href="https://github.com/CTurt">CTurt</a> - Inspiration of his DS-exploit-finding guide</li>
 <li><a href="https://github.com/jerbear64">Jerbear64</a> & <a href="https://github.com/emiyl">emiyl</a> - For the DSiCFW guide</li>
 </ul>
