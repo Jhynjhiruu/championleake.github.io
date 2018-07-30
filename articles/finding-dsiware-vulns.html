@@ -79,25 +79,38 @@ It shouldn't be a challenge to pick a title to observe. I'll also be looking at 
 <br><br>
 The word, "Check", should ring a bell. The word "Sum" is like a number or a byte. Maybe adding if you're a mathematician. So if you really put those 2 meanings together, you can tell they're checking something. But for what purpose? It's to ensure a file or a section in a file is not corrupted or tampered with. Without checksums, programs/applications would be extremly vulnerable to simple attacks.
 <br><br>
-With checksums, editing a savefile without actually patching those checksum bytes will ensure the game deletes and rewrites the save. So that's what we have to get through before we start digging or editing whatever we please. Let's create some saves and compare those files so we can pin-point or see if this WordSearcher game has a checksum(s). Luckily, it's common for a DSiWare appplication to use a familiar CRC polynomial so you have a chance to patch checksums easily with <a href="https://mh-nexus.de/en/hxd/">HxD</a> or other sum calculators.
+With checksums, editing a savefile without actually patching those checksum bytes will ensure the game deletes and rewrites the save. So that's what we need to take care of before we start editing whatever we please. Let's create some saves and compare them so we can locate the checksum(s) for "WordSearcher". It's common for some DSiWare titles to use a familiar CRC algorithm which gives you a greater chance to patch checksums easily with <a href="https://mh-nexus.de/en/hxd/">HxD</a> or other checksum calculators.
 <br><br>
-So I created 2 brand new profiles. 1 contains a my username to be AAAAAAAA, and the other contains AAAAAAAA. So two different public.sav files to use <a href="https://www.cjmweb.net/vbindiff/">VBinDiff</a> to compare. I simple just renamed those to their apppropriate names. But before that, we first have to get the real save that's mounted in the public.sav. So we'll use <a href="https://www.osforensics.com/tools/mount-disk-images.html">OSFMount</a> to do this.
+So, I'm going to create 2 savefiles (two public.sav). One will contain the username "AAAAAAAA", and the other will contain "AAAAAAAB". We'll eventually use <a href="https://www.cjmweb.net/vbindiff/">VBinDiff</a> to compare the two files and look for differences. We first have to fetch the real save that's mounted within the "public.sav" file. this can be done with <a href="https://www.osforensics.com/tools/mount-disk-images.html">OSFMount</a> or any program taht can mount disk images.
 <br><br><br>
-Before you start, you must have your DSi NAND that you dumped. There are tutorials out there to be able to dump your nand. You'll also need your DSi(s) CID. The newest <a href="https://dsi.cfw.guide/assets/files/fwTool.nds">FWTOOL 2.0.0</a> homebrew application should help with that. You'll also need your ConsoleID as well.
-<br><br>Assuming you did this already and that you know how to do this let's move onto mounting our save files we made.
+You must have DSi NAND dump (that you dumped yourself). <a href="https://github.com/Wintermute">Wintermute's</a> <a href="https://dsi.cfw.guide/assets/files/fwTool.nds">FWTOOL 2.0.0</a> homebrew application should help you dump your NAND. The last thing you'll need your DSi's CID and ConsoleID, which you can look at <a href=https://gbatemp.net/threads/dsi-downgrading-the-complete-guide.393682/">Gadorach's downgrading guide</a> to obtain these things.
+<br><br>I assume that you already have the things you need, I'll quickly go over what you need to do when mounting your NAND to fetch the public.sav(s).
+<ul>
+Your NAND needs to be decrypted before any mounting should occur.
+<li>Open up "OSFMount"</li>
+<li>Select "Mount New..."</li>
+<li>Click the "..." button to the right of "Image file".</li>
+<li>Find your DSi's NAND and select "Partition 0".</li>
+<li>Then click OK</li>
+</ul>
+Your set up should look like the screenshot below.
+<img src="../articles/assets/OSFMount_SetUp.JPG">
+Now you should be able to open your mounted NAND and look for the correct titleid for your corresponding DSiWare title from "/title/0030004/TITLEID/data/. Copy the "public.sav" file somewhere safe.<br><br>
+You can basically repeat the whole process. Create a new save with a different name, dump your NAND again, decrypted your NAND, mount your NAND, and then find the "public.sav" again. I still suggest renaming those files to stay organized. After your done you can still rename it to it's original name. Let's now move onto mounting our savefiles.
 <ul>
 <li>Open up "OSFMount"</li>
 <li>Select "Mount New..."</li>
 <li>Click the "..." button to the right of "Image file".</li>
-<li>Find the public.sav you renamed (AAAAAAAA.sav for this guide)</li>
-<li>Un-check "Read-Only drive" and check "Mount as removeable media"</li>
+<li>Find the "public.sav" (or the renamed savefile), I renamed the "public.sav"(s) to "AAAAAAAA.sav" and "AAAAAAAB.sav" for the purpose of this article.</li>
+<li>Un-check the "Read-Only drive" box and check the "Mount as removeable media" option</li>
 <li>Click "Ok" and you should be ready to go.</li>
+</ul>
+Copy the file that's mounted from the savefile and place it somewhere safe. Repeat the whole process to the other savefile as well.
 <img src="../articles/assets/OSFMount_ScreenShot.JPG">
 <br>
-You can click one of the drive medias and you should be greeted with a real savefile without the DSiWare headers or any of the things we're not focusing on. Repeat the samething and you should be greeted with another. Let's now move on to comparing the two files wit VBinDiff
-<img src="../articles/assets/OSFMount_ScreenShot2.JPG">
+We can now move onto using VBinDiff to compare the two savefiles.
 <br><br>
-You should always have a different file name for these files so that you're a bit organized with everything. So selecting those two files and dragging it in the program gave us this.
+Select the two files and drag it to the program VBinDiff gave us this.
 <img src="../articles/assets/VBinDiff-ScreenShot.JPG">
 <img src="../articles/assets/VBinDiff-ScreenShot2.JPG">
 <br>
